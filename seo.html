@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  SEO Head Generator
+  Created by: Akash ❤️
+  Description: An AI-powered tool that analyzes HTML/page 
+               content and auto-generates a fully optimized 
+               SEO <head> section including meta tags, schema,
+               Open Graph, Twitter Card, and more.
+  ============================================================
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEO Head Generator</title>
+
+  <!-- Google Fonts: Syne for headings/UI, JetBrains Mono for code display -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       CSS CUSTOM PROPERTIES (Design Tokens)
+       Central place to control the entire color palette & theme.
+       Change these values to restyle the whole app instantly.
+    ============================================================ */
+    :root {
+      --bg:#0a0a0f;          /* Main page background — near-black */
+      --surface:#111118;     /* Card / panel background */
+      --surface2:#18181f;    /* Slightly lighter surface for nested elements */
+      --border:#2a2a38;      /* Subtle border color */
+      --accent:#7c6af7;      /* Primary purple accent (buttons, highlights) */
+      --accent2:#e05cff;     /* Secondary pink/magenta accent */
+      --accent3:#00e5c0;     /* Teal/green — used for success states */
+      --text:#f0eff8;        /* Main text color */
+      --muted:#6b6a80;       /* Dimmed/secondary text */
+      --warning:#ffb830;     /* Warning — description length too short */
+      --error:#ff5c7a;       /* Error — description too long or API failure */
+    }
+
+    /* ============================================================
+       RESET & BASE STYLES
+       Normalize browser defaults for consistent cross-browser look.
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden; /* Prevent horizontal scroll from blobs */
+    }
+
+    /* ============================================================
+       BACKGROUND GRID PATTERN
+       CSS pseudo-element creates the subtle grid overlay using
+       two overlapping linear-gradients (horizontal + vertical lines).
+       pointer-events:none ensures it never blocks clicks.
+    ============================================================ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,106,247,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,106,247,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ============================================================
+       AMBIENT GLOW BLOBS
+       Two large blurred circles positioned off-screen corners to
+       create a soft, atmospheric glow effect behind the UI.
+    ============================================================ */
+    .blob { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: 0; opacity: .2; }
+    .blob-1 { width: 500px; height: 500px; top: -100px; left: -100px; background: var(--accent); }
+    .blob-2 { width: 400px; height: 400px; bottom: -50px; right: -100px; background: var(--accent2); }
+
+    /* ============================================================
+       HEADER / NAVBAR
+       Contains the logo mark (gradient square with "S") and brand
+       name. Uses flexbox for horizontal alignment.
+    ============================================================ */
+    header { position: relative; z-index: 10; padding: 32px 48px 0; display: flex; align-items: center; gap: 14px; }
+    .logo-mark { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 11px; display: grid; place-items: center; font-size: 18px; font-weight: 800; flex-shrink: 0; }
+    .brand h1 { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
+    .brand span { font-size: 11px; color: var(--muted); font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+
+    /* ============================================================
+       HERO SECTION
+       Large centered heading with a gradient text effect using
+       -webkit-background-clip + -webkit-text-fill-color trick.
+    ============================================================ */
+    .hero { position: relative; z-index: 10; text-align: center; padding: 48px 24px 40px; }
+    .hero h2 { font-size: clamp(32px, 5vw, 64px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; background: linear-gradient(135deg, #f0eff8 0%, var(--accent) 50%, var(--accent2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { margin-top: 14px; font-size: 16px; color: var(--muted); max-width: 500px; margin-inline: auto; line-height: 1.6; }
+
+    /* ============================================================
+       MAIN TWO-COLUMN GRID LAYOUT
+       Input panel on the left, Output panel on the right.
+       Collapses to single column on screens under 900px.
+    ============================================================ */
+    .main { position: relative; z-index: 10; max-width: 1280px; margin: 0 auto; padding: 0 24px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media(max-width:900px) { .main { grid-template-columns: 1fr; } }
+
+    /* ============================================================
+       PANEL (CARD) COMPONENT
+       Used for both the Input and Output sections.
+       Dark background with subtle border and rounded corners.
+    ============================================================ */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+    .panel-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
+    .panel-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+
+    /* Small colored dot indicators next to panel titles */
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-purple { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .dot-teal { background: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
+
+    /* ============================================================
+       FILE UPLOAD / INPUT AREA
+       Contains the drag-and-drop zone and the paste textarea.
+    ============================================================ */
+    .upload-zone { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Dashed drop zone — highlights on hover or active drag */
+    .drop-area { border: 2px dashed var(--border); border-radius: 14px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(124,106,247,.03); }
+    .drop-area:hover, .drop-area.drag-over { border-color: var(--accent); background: rgba(124,106,247,.08); }
+    .drop-icon { font-size: 34px; margin-bottom: 10px; }
+    .drop-area p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .drop-area strong { color: var(--accent); cursor: pointer; }
+    #fileInput { display: none; } /* Hidden native file input, triggered via JS */
+
+    /* Code / HTML paste textarea */
+    .code-area { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; background: #0d0d14; color: #c9c7e8; border: 1px solid var(--border); border-radius: 12px; padding: 14px; width: 100%; min-height: 240px; resize: vertical; outline: none; transition: border-color .2s; }
+    .code-area:focus { border-color: var(--accent); }
+    .code-area::placeholder { color: #3a394f; }
+
+    /* ============================================================
+       SETTINGS TOGGLES GRID
+       2-column grid of toggle switches for each SEO tag type.
+       Each toggle uses a custom CSS checkbox-to-switch trick.
+    ============================================================ */
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 24px; }
+    @media(max-width:600px) { .settings-grid { grid-template-columns: 1fr; } }
+    .setting-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .setting-label { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+
+    /* Custom toggle switch built entirely with CSS (no JS needed for the animation) */
+    .toggle { position: relative; width: 38px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; } /* Hide native checkbox */
+    .slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; cursor: pointer; transition: background .2s; }
+    .slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform .2s; }
+    .toggle input:checked + .slider { background: var(--accent); }              /* Checked = purple track */
+    .toggle input:checked + .slider::before { transform: translateX(16px); }   /* Checked = knob slides right */
+
+    /* ============================================================
+       GENERATE BUTTON
+       Full-width gradient button with loading state animation.
+       When .loading class is added, spinner appears and text hides.
+    ============================================================ */
+    .btn-wrap { padding: 18px 24px 24px; }
+    .btn-generate { width: 100%; padding: 15px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 14px; color: white; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: .5px; cursor: pointer; transition: opacity .2s, transform .15s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-generate:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-generate:active { transform: translateY(0); }
+    .btn-generate:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    /* Spinner shown during API call */
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+    .btn-generate.loading .spinner { display: block; }   /* Show spinner */
+    .btn-generate.loading .btn-text { display: none; }   /* Hide text */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============================================================
+       OUTPUT PANEL STYLES
+       Shows empty state placeholder until results arrive,
+       then reveals metrics, progress bar, and generated code.
+    ============================================================ */
+    .output-panel { display: flex; flex-direction: column; }
+    .output-body { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Placeholder shown before any generation happens */
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; gap: 12px; color: var(--muted); min-height: 280px; }
+    .empty-icon { font-size: 44px; opacity: .35; }
+    .empty-state p { font-size: 13px; max-width: 240px; line-height: 1.6; }
+
+    /* ============================================================
+       TAG STATUS CHIPS
+       Colored pill badges shown after generation to indicate
+       which tags were successfully created and their quality.
+    ============================================================ */
+    .tags-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag-chip { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .chip-green { background: rgba(0,229,192,.12); color: var(--accent3); border: 1px solid rgba(0,229,192,.2); }      /* ✓ Good */
+    .chip-purple { background: rgba(124,106,247,.12); color: var(--accent); border: 1px solid rgba(124,106,247,.2); }  /* Info */
+    .chip-warning { background: rgba(255,184,48,.12); color: var(--warning); border: 1px solid rgba(255,184,48,.2); } /* Warning */
+
+    /* ============================================================
+       GENERATED CODE OUTPUT BOX
+       Monospace scrollable pre-like div for displaying the
+       generated HTML. Copy button is absolutely positioned inside.
+    ============================================================ */
+    .code-output-wrap { position: relative; }
+    .code-output { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; background: #0d0d14; color: #c9c7e8; border: 1px solid var(--border); border-radius: 12px; padding: 16px; width: 100%; min-height: 300px; outline: none; white-space: pre; overflow: auto; }
+
+    /* Floating copy button overlaid on the code box */
+    .copy-btn { position: absolute; top: 10px; right: 10px; padding: 5px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 6px; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { color: var(--accent3); border-color: var(--accent3); } /* Green state after copy */
+
+    /* ============================================================
+       SEO METRICS CARDS
+       3-column grid showing: tags added, description length, keyword count.
+    ============================================================ */
+    .metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .metric { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; }
+    .metric-val { font-size: 22px; font-weight: 800; color: var(--accent3); }
+    .metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+    /* ============================================================
+       DESCRIPTION LENGTH PROGRESS BAR
+       Visual indicator of meta description character count.
+       Color changes: teal = perfect (150-155), yellow = short, red = over.
+    ============================================================ */
+    .desc-meter { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .desc-meter-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 6px; transition: width .4s, background .4s; } /* Animated fill */
+
+    /* ============================================================
+       TOAST NOTIFICATIONS
+       Slide-up notification for success/error feedback.
+       Toggled with .show class — uses cubic-bezier for springy feel.
+    ============================================================ */
+    .toast { position: fixed; bottom: 28px; right: 28px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; z-index: 999; transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--accent3); color: var(--accent3); }
+    .toast.error { border-color: var(--error); color: var(--error); }
+
+    /* ============================================================
+       MISC UTILITY STYLES
+    ============================================================ */
+
+    /* Badge shown after a file is uploaded (displays filename) */
+    .file-badge { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; font-size: 12px; color: var(--accent3); font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px; }
+
+    /* Canonical URL input field */
+    .url-input { background: #0d0d14; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; width: 100%; color: var(--text); font-family: 'Syne', sans-serif; font-size: 13px; outline: none; transition: border-color .2s; margin-top: -4px; }
+    .url-input:focus { border-color: var(--accent); }
+    .url-input::placeholder { color: #3a394f; }
+
+    /* Section label above inputs (e.g. "Canonical URL", "Include Tags") */
+    .field-label { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 0 24px; margin-top: 4px; }
+
+    /* ============================================================
+       FOOTER STYLES
+       Sticky bottom footer with gradient border top,
+       credits to Akash with a pulsing heart animation.
+    ============================================================ */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 28px 24px 32px;
+      margin-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Subtle gradient line at the very top of the footer */
+    footer::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 50%;
+      transform: translateX(-50%);
+      width: 200px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+    }
+
+    .footer-text {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: .5px;
+    }
+
+    .footer-text strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    /* Pulsing heart animation — scales up and down rhythmically */
+    .heart {
+      display: inline-block;
+      color: #ff5c7a;
+      animation: heartbeat 1.4s ease-in-out infinite;
+      font-size: 15px;
+      margin: 0 2px;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      14%       { transform: scale(1.25); }
+      28%       { transform: scale(1); }
+      42%       { transform: scale(1.2); }
+      56%       { transform: scale(1); }
+    }
+
+    .footer-tagline {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      opacity: .5;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient glow blobs — decorative background elements -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <!-- ============================================================
+       HEADER
+       Brand logo mark + site name and tagline.
+  ============================================================ -->
+  <header>
+    <div class="logo-mark">S</div>
+    <div class="brand">
+      <h1>SEO Head Generator</h1>
+      <span>AI-Powered Meta Tag Optimizer</span>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       HERO SECTION
+       Large headline and subtitle explaining what the tool does.
+  ============================================================ -->
+  <div class="hero">
+    <h2>Perfect SEO &lt;head&gt;<br>In Seconds</h2>
+    <p>Upload your HTML or paste code — AI analyzes the content and generates a fully optimized, SEO-friendly head section.</p>
+  </div>
+
+  <!-- ============================================================
+       MAIN CONTENT — TWO PANEL GRID
+       Left: Input (upload + settings)
+       Right: Output (generated tags + metrics)
+  ============================================================ -->
+  <div class="main">
+
+    <!-- ═══════════════════════════════════
+         LEFT PANEL — INPUT
+    ═══════════════════════════════════ -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="dot dot-purple"></span>Input
+        </div>
+        <span style="font-size:12px;color:var(--muted)">HTML / Code</span>
+      </div>
+
+      <!-- File drag-and-drop zone + paste textarea -->
+      <div class="upload-zone">
+
+        <!-- Drop zone: clicking the <strong> triggers the hidden file input -->
+        <div class="drop-area" id="dropArea">
+          <div class="drop-icon">📄</div>
+          <p>
+            <strong onclick="document.getElementById('fileInput').click()">Click to upload</strong>
+            or drag &amp; drop<br>
+            <span style="font-size:11px;opacity:.6">.html, .htm, .php, .txt, .jsx, .vue</span>
+          </p>
+          <!-- Hidden native file picker — triggered programmatically -->
+          <input type="file" id="fileInput" accept=".html,.htm,.php,.txt,.jsx,.vue,.js" />
+        </div>
+
+        <!-- File name badge shown after a file is picked (hidden by default) -->
+        <div id="fileBadge" style="display:none" class="file-badge">
+          📎 <span id="fileName"></span>
+        </div>
+
+        <!-- Paste area for manual HTML input -->
+        <textarea
+          class="code-area"
+          id="codeInput"
+          placeholder="Or paste your HTML / page content here...">
+        </textarea>
+      </div>
+
+      <!-- Canonical URL field -->
+      <div class="field-label">Canonical URL (optional)</div>
+      <div style="padding:8px 24px 16px">
+        <input class="url-input" id="canonicalUrl" type="url" placeholder="https://yourwebsite.com/page-url" />
+      </div>
+
+      <!-- ───────────────────────────────
+           TAG TOGGLE SWITCHES
+           Each toggle controls whether that SEO tag type
+           is included in the generated output.
+      ─────────────────────────────────── -->
+      <div class="field-label" style="margin-bottom:10px">Include Tags</div>
+      <div class="settings-grid">
+
+        <!-- Title tag toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Title</span>
+          <label class="toggle"><input type="checkbox" id="tog_title" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Meta description toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Description</span>
+          <label class="toggle"><input type="checkbox" id="tog_desc" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Meta keywords toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Keywords</span>
+          <label class="toggle"><input type="checkbox" id="tog_kw" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Author meta tag toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Author</span>
+          <label class="toggle"><input type="checkbox" id="tog_author" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Canonical link tag toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Canonical</span>
+          <label class="toggle"><input type="checkbox" id="tog_canonical" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Robots meta tag toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Robots</span>
+          <label class="toggle"><input type="checkbox" id="tog_robots" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Publisher meta tag toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Publisher</span>
+          <label class="toggle"><input type="checkbox" id="tog_publisher" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- JSON-LD Schema markup toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Schema JSON-LD</span>
+          <label class="toggle"><input type="checkbox" id="tog_schema" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Open Graph tags toggle (Facebook/LinkedIn sharing) -->
+        <div class="setting-item">
+          <span class="setting-label">OG Tags</span>
+          <label class="toggle"><input type="checkbox" id="tog_og" checked><span class="slider"></span></label>
+        </div>
+
+        <!-- Twitter Card meta tags toggle -->
+        <div class="setting-item">
+          <span class="setting-label">Twitter Card</span>
+          <label class="toggle"><input type="checkbox" id="tog_twitter" checked><span class="slider"></span></label>
+        </div>
+
+      </div><!-- end .settings-grid -->
+
+      <!-- Generate button — triggers the AI API call -->
+      <div class="btn-wrap">
+        <button class="btn-generate" id="generateBtn">
+          <span class="spinner"></span>          <!-- Rotating spinner (shown during loading) -->
+          <span class="btn-text">✦ Generate SEO Head Tags</span>
+        </button>
+      </div>
+
+    </div><!-- end left panel -->
+
+    <!-- ═══════════════════════════════════
+         RIGHT PANEL — OUTPUT
+         Displays empty state before generation,
+         then shows metrics + generated code after.
+    ═══════════════════════════════════ -->
+    <div class="panel output-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span class="dot dot-teal"></span>Generated Output
+        </div>
+        <!-- Live status text: "Waiting for input" → "Generating..." → "Done ✓" -->
+        <span id="statusBadge" style="font-size:12px;color:var(--muted)">Waiting for input</span>
+      </div>
+
+      <div class="output-body">
+
+        <!-- Empty placeholder state (visible before first generation) -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🔍</div>
+          <p>Your SEO-optimized head section will appear here</p>
+        </div>
+
+        <!-- Results area (hidden by default, revealed after generation) -->
+        <div id="resultsArea" style="display:none;flex-direction:column;gap:16px">
+
+          <!-- Tag status chips row (e.g. Title ✓, Desc ✓, Schema ✓) -->
+          <div class="tags-row" id="tagsRow"></div>
+
+          <!-- Three metric cards: Tags Added / Desc Length / Keyword Count -->
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-val" id="metricTags">—</div>
+              <div class="metric-label">Tags Added</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val" id="metricDesc">—</div>
+              <div class="metric-label">Desc Length</div>
+            </div>
+            <div class="metric">
+              <div class="metric-val" id="metricKw">—</div>
+              <div class="metric-label">Keywords</div>
+            </div>
+          </div>
+
+          <!-- Description character count progress bar -->
+          <div class="desc-meter">
+            <div class="desc-meter-header">
+              <span>Description Length</span>
+              <span id="descCount">0 / 155 chars</span>
+            </div>
+            <div class="progress-bar">
+              <!-- Width and color updated dynamically via JS -->
+              <div class="progress-fill" id="descBar" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Generated HTML code display with copy button -->
+          <div class="code-output-wrap">
+            <button class="copy-btn" id="copyBtn">📋 Copy</button>
+            <!-- Code output rendered as pre-formatted text -->
+            <div class="code-output" id="codeOutput"></div>
+          </div>
+
+        </div><!-- end #resultsArea -->
+
+      </div><!-- end .output-body -->
+    </div><!-- end right panel -->
+
+  </div><!-- end .main grid -->
+
+  <!-- ============================================================
+       FOOTER
+       Simple centered credit line with pulsing heart animation.
+  ============================================================ -->
+  <footer>
+    <div class="footer-text">
+      Made with <span class="heart">❤️</span> by <strong>Akash</strong>
+    </div>
+    <div class="footer-tagline">SEO Head Generator &mdash; Powered by Groq LLaMA 3</div>
+  </footer>
+
+  <!-- ============================================================
+       TOAST NOTIFICATION ELEMENT
+       Positioned fixed bottom-right, toggled via JS .show class.
+  ============================================================ -->
+  <div class="toast" id="toast"></div>
+
+
+  <!-- ============================================================
+       JAVASCRIPT — APPLICATION LOGIC
+  ============================================================ -->
+  <script>
+    // ── Groq API Configuration ────────────────────────────────
+    // 🔑 PASTE YOUR GROQ API KEY BELOW (get one FREE from console.groq.com)
+    // Groq is 100% free, super fast, and works directly from the browser!
+    const API_KEY = "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";
+
+    // Groq API endpoint — OpenAI-compatible format
+    const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
+
+    // ── DOM references cached for performance ───────────────────
+    const dropArea  = document.getElementById('dropArea');
+    const fileInput = document.getElementById('fileInput');
+    const codeInput = document.getElementById('codeInput');
+    const fileBadge = document.getElementById('fileBadge');
+    const fileName  = document.getElementById('fileName');
+
+    // ── FILE DRAG AND DROP HANDLERS ─────────────────────────────
+    // Highlight drop zone when user drags a file over it
+    ['dragenter', 'dragover'].forEach(evt =>
+      dropArea.addEventListener(evt, ev => {
+        ev.preventDefault();
+        dropArea.classList.add('drag-over'); // adds purple border highlight
+      })
+    );
+
+    // Remove highlight when drag leaves or file is dropped
+    ['dragleave', 'drop'].forEach(evt =>
+      dropArea.addEventListener(evt, ev => {
+        ev.preventDefault();
+        dropArea.classList.remove('drag-over');
+      })
+    );
+
+    // When a file is dropped, read it as text and put it in the textarea
+    dropArea.addEventListener('drop', ev => {
+      const f = ev.dataTransfer.files[0];
+      if (f) loadFile(f);
+    });
+
+    // When a file is selected via the native file picker, load it
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) loadFile(fileInput.files[0]);
+    });
+
+    /**
+     * loadFile — reads the selected file as plain text using FileReader API,
+     * populates the textarea with its content, and shows the filename badge.
+     * @param {File} f - The File object from the drop or file input
+     */
+    function loadFile(f) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        codeInput.value = e.target.result;   // put file content into textarea
+        fileName.textContent = f.name;       // show filename in badge
+        fileBadge.style.display = 'flex';    // reveal the file badge
+      };
+      reader.readAsText(f); // read file as UTF-8 text
+    }
+
+    // ── TOAST NOTIFICATION UTILITY ──────────────────────────────
+    /**
+     * showToast — displays a slide-up notification at the bottom-right corner.
+     * Automatically hides after 3 seconds.
+     * @param {string} msg  - Text to display
+     * @param {string} type - 'success' (teal) or 'error' (red)
+     */
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = (type === 'success' ? '✓ ' : '✕ ') + msg;
+      t.className = `toast ${type} show`; // add .show to trigger slide-up CSS transition
+      setTimeout(() => t.classList.remove('show'), 3000); // auto-hide after 3s
+    }
+
+    // ── READ TOGGLE SWITCH STATES ───────────────────────────────
+    /**
+     * getToggles — reads all checkbox toggle states and returns an object.
+     * Used to tell the AI which tag types to generate.
+     * @returns {Object} map of tag name → boolean (checked or not)
+     */
+    function getToggles() {
+      return {
+        title:       document.getElementById('tog_title').checked,
+        description: document.getElementById('tog_desc').checked,
+        keywords:    document.getElementById('tog_kw').checked,
+        author:      document.getElementById('tog_author').checked,
+        canonical:   document.getElementById('tog_canonical').checked,
+        robots:      document.getElementById('tog_robots').checked,
+        publisher:   document.getElementById('tog_publisher').checked,
+        schema:      document.getElementById('tog_schema').checked,
+        og:          document.getElementById('tog_og').checked,
+        twitter:     document.getElementById('tog_twitter').checked,
+      };
+    }
+
+    // ── COPY BUTTON HANDLER ─────────────────────────────────────
+    // Copies the generated code to clipboard and shows feedback.
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const txt = document.getElementById('codeOutput').textContent;
+      navigator.clipboard.writeText(txt).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('copied'); // teal color state
+        setTimeout(() => {
+          btn.textContent = '📋 Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+        showToast('Head tags copied to clipboard!');
+      });
+    });
+
+    // ── GENERATE BUTTON CLICK ───────────────────────────────────
+    document.getElementById('generateBtn').addEventListener('click', generateSEO);
+
+    /**
+     * generateSEO — main function that:
+     *  1. Validates that content has been provided
+     *  2. Builds a detailed prompt with SEO rules
+     *  3. Sends it to the Anthropic Claude API
+     *  4. Displays the returned HTML tags in the output panel
+     */
+    async function generateSEO() {
+      const code = codeInput.value.trim();
+
+      // Guard: require content before proceeding
+      if (!code) {
+        showToast('Please paste or upload HTML content first.', 'error');
+        return;
+      }
+
+      // ── UI: Enter loading state ──────────────────────────────
+      const btn = document.getElementById('generateBtn');
+      btn.classList.add('loading'); // shows spinner, hides button text
+      btn.disabled = true;
+      document.getElementById('statusBadge').textContent = 'Generating...';
+
+      // Collect which tags user wants generated
+      const toggles   = getToggles();
+      const canonical = document.getElementById('canonicalUrl').value.trim();
+
+      // Build a comma-separated list of requested tag types for the prompt
+      const wantList = Object.entries(toggles)
+        .filter(([, v]) => v)
+        .map(([k]) => k)
+        .join(', ');
+
+      // ── BUILD AI PROMPT ──────────────────────────────────────
+      // Detailed instructions ensure Groq/LLaMA returns exactly what we need:
+      // raw HTML tags, no markdown, with strict description char limits.
+      const prompt = `You are an expert SEO specialist. Analyze the HTML/content provided and generate a fully SEO-optimized <head> section.
+
+USER CONTENT:
+${code.substring(0, 8000)}
+
+CANONICAL URL: ${canonical || 'Not provided — infer from content or leave blank'}
+
+Generate ONLY these requested tags: ${wantList}
+
+STRICT RULES:
+1. Title: 50-60 characters, compelling, keyword-rich
+2. Meta description: MUST be between 150-155 characters (including spaces). Count carefully. 
+3. Keywords: 8-12 relevant, comma-separated, no duplicates
+4. Author: Infer from content or use "Editorial Team"
+5. Canonical: Use provided URL or infer logically
+6. Robots: "index, follow" unless content suggests otherwise
+7. Publisher: Infer from content/brand name
+8. Schema: Appropriate JSON-LD schema (Article, WebPage, Product, etc.) based on content type
+9. OG tags: Complete Open Graph including og:title, og:description, og:type, og:url, og:image (use placeholder if needed)
+10. Twitter Card: summary_large_image type
+11. ALL content must be SEO-friendly, natural language, no keyword stuffing
+
+IMPORTANT: Return ONLY the raw HTML head tags, no explanation, no markdown, no \`\`\` fences, no <html> or <body> wrapper. Start directly with <!-- SEO Head Tags --> comment then the tags.
+
+The description meta tag MUST be exactly 150-155 characters. Verify this before outputting.`;
+
+      // ── CALL GROQ API ──────────────────────────────────
+      // Groq uses OpenAI-compatible format but is FREE and extremely fast (LLaMA 3)
+      try {
+        const response = await fetch(GROQ_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`   // Groq uses Bearer token like OpenAI
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',  // Groq's best free model — fast & smart
+            max_tokens: 1000,                   // Enough for a full SEO head section
+            messages: [
+              {
+                role: 'system',                 // System message defines AI behavior
+                content: 'You are an expert SEO specialist. Return ONLY raw HTML tags with no markdown, no code fences, no explanation.'
+              },
+              {
+                role: 'user',                   // User message has the page content + rules
+                content: prompt
+              }
+            ]
+          })
+        });
+
+        const data = await response.json();
+
+        // Throw on non-2xx HTTP response (e.g. 401 Invalid key, 429 Rate limit)
+        if (!response.ok) throw new Error(data.error?.message || 'Groq API error');
+
+        // Groq uses OpenAI-compatible response: choices[0].message.content
+        const output  = data.choices?.[0]?.message?.content || '';
+
+        // Strip any accidental markdown code fences
+        const cleaned = output.replace(/```html|```/gi, '').trim();
+
+        // Render results in the output panel
+        displayResults(cleaned, toggles);
+        showToast('SEO head tags generated successfully!');
+        document.getElementById('statusBadge').textContent = 'Done ✓';
+
+      } catch (err) {
+        // Show error state if API call fails
+        console.error(err);
+        showToast('Generation failed: ' + err.message, 'error');
+        document.getElementById('statusBadge').textContent = 'Error';
+
+      } finally {
+        // ── UI: Exit loading state (always runs) ────────────────
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    /**
+     * displayResults — takes the generated HTML string and:
+     *  - Shows the results area and hides the empty state
+     *  - Populates the code output box
+     *  - Extracts metrics (tag count, description length, keyword count)
+     *  - Updates the progress bar color based on description length
+     *  - Renders tag status chips
+     * @param {string} html    - Raw generated HTML head tags
+     * @param {Object} toggles - Which tags were requested (for context)
+     */
+    function displayResults(html, toggles) {
+      // Hide empty state, show results area
+      document.getElementById('emptyState').style.display = 'none';
+      const results = document.getElementById('resultsArea');
+      results.style.display = 'flex';
+
+      // Populate the code display box
+      document.getElementById('codeOutput').textContent = html;
+
+      // ── METRIC: Count total HTML tags ────────────────────────
+      // Matches <meta, <title, <link, <script openings
+      const tagCount = (html.match(/<(meta|title|link|script)/gi) || []).length;
+      document.getElementById('metricTags').textContent = tagCount;
+
+      // ── METRIC: Extract meta description text ────────────────
+      // Regex handles both attribute orderings (name first or content first)
+      const descMatch =
+        html.match(/name=["']description["'][^>]*content=["']([^"']+)["']/i) ||
+        html.match(/content=["']([^"']+)["'][^>]*name=["']description["']/i);
+      const descText = descMatch ? descMatch[1] : '';
+      const descLen  = descText.length;
+
+      document.getElementById('metricDesc').textContent = descLen;
+      document.getElementById('descCount').textContent  = `${descLen} / 155 chars`;
+
+      // ── PROGRESS BAR: Color based on length quality ──────────
+      const pct = Math.min((descLen / 155) * 100, 100);
+      const bar = document.getElementById('descBar');
+      bar.style.width = pct + '%';
+      bar.style.background =
+        (descLen >= 150 && descLen <= 155) ? 'var(--accent3)' : // ✓ Perfect — teal
+        (descLen < 150)                    ? 'var(--warning)'   // Too short — yellow
+                                           : 'var(--error)';    // Too long — red
+
+      // ── METRIC: Count keywords ───────────────────────────────
+      const kwMatch =
+        html.match(/name=["']keywords["'][^>]*content=["']([^"']+)["']/i) ||
+        html.match(/content=["']([^"']+)["'][^>]*name=["']keywords["']/i);
+      const kwCount = kwMatch ? kwMatch[1].split(',').length : 0;
+      document.getElementById('metricKw').textContent = kwCount;
+
+      // ── TAG STATUS CHIPS ─────────────────────────────────────
+      // Each chip signals whether a tag was included and its quality level
+      const chips = [];
+      if (html.includes('<title'))                           chips.push(['Title',          'chip-green']);
+      if (descLen >= 150 && descLen <= 155)                  chips.push(['Desc ✓',         'chip-green']);
+      else if (descLen > 0)                                  chips.push([`Desc ${descLen}c`, 'chip-warning']);
+      if (html.includes('keywords'))                         chips.push(['Keywords',        'chip-green']);
+      if (html.includes('canonical'))                        chips.push(['Canonical',       'chip-purple']);
+      if (html.includes('robots'))                           chips.push(['Robots',          'chip-purple']);
+      if (html.includes('application/ld+json'))              chips.push(['Schema',          'chip-green']);
+      if (html.includes('og:title'))                         chips.push(['OG Tags',         'chip-green']);
+      if (html.includes('twitter:card'))                     chips.push(['Twitter',         'chip-purple']);
+      if (html.includes('author'))                           chips.push(['Author',          'chip-purple']);
+      if (html.includes('publisher'))                        chips.push(['Publisher',       'chip-purple']);
+
+      // Render chips as HTML pill badges
+      document.getElementById('tagsRow').innerHTML = chips
+        .map(([label, cls]) => `<span class="tag-chip ${cls}">${label}</span>`)
+        .join('');
+    }
+  </script>
+
+</body>
+</html>
