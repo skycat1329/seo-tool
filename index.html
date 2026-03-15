@@ -715,7 +715,7 @@
       // ── BUILD AI PROMPT ──────────────────────────────────────
       // Detailed instructions ensure Groq/LLaMA returns exactly what we need:
       // raw HTML tags, no markdown, with strict description char limits.
-      const prompt = `You are an expert SEO specialist. Analyze the HTML/content provided and generate a fully SEO-optimized <head> section.
+      const prompt = `You are a world-class SEO specialist and Schema.org expert. Analyze the HTML/content and generate a fully SEO-optimized <head> section.
 
 USER CONTENT:
 ${code.substring(0, 8000)}
@@ -726,20 +726,66 @@ Generate ONLY these requested tags: ${wantList}
 
 STRICT RULES:
 1. Title: 50-60 characters, compelling, keyword-rich
-2. Meta description: MUST be between 150-155 characters (including spaces). Count carefully. 
-3. Keywords: 8-12 relevant, comma-separated, no duplicates
+2. Meta description: MUST be 150-155 characters including spaces. Count every character carefully.
+3. Keywords: 8-12 relevant keywords, comma-separated, no duplicates
 4. Author: Infer from content or use "Editorial Team"
 5. Canonical: Use provided URL or infer logically
 6. Robots: "index, follow" unless content suggests otherwise
-7. Publisher: Infer from content/brand name
-8. Schema: Appropriate JSON-LD schema (Article, WebPage, Product, etc.) based on content type
-9. OG tags: Complete Open Graph including og:title, og:description, og:type, og:url, og:image (use placeholder if needed)
-10. Twitter Card: summary_large_image type
-11. ALL content must be SEO-friendly, natural language, no keyword stuffing
+7. Publisher: Infer brand or company name from content
 
-IMPORTANT: Return ONLY the raw HTML head tags, no explanation, no markdown, no \`\`\` fences, no <html> or <body> wrapper. Start directly with <!-- SEO Head Tags --> comment then the tags.
+8. SCHEMA RULES - THIS IS THE MOST IMPORTANT RULE - READ CAREFULLY:
+   You MUST generate the CORRECT schema type(s) based on what the content is actually about.
+   Do NOT default to only Organization. Analyze deeply.
+   Generate MULTIPLE separate <script type="application/ld+json"> blocks when content supports it.
 
-The description meta tag MUST be exactly 150-155 characters. Verify this before outputting.`;
+   SCHEMA DECISION GUIDE - generate ALL schemas that match:
+
+   If content is about SERVICES (web design, SEO, marketing, consulting, etc.):
+     -> MUST generate Service schema: {"@type":"Service","name":"Service Name","serviceType":"Type of Service","provider":{"@type":"Organization","name":"Company Name"},"areaServed":"City/Country","description":"What the service does"}
+     -> Also generate Organization schema for the company
+     -> Also generate WebPage schema
+
+   If content is a COMPANY / ABOUT page:
+     -> Generate Organization with name, url, logo, description, contactPoint, sameAs (social links)
+     -> If has physical address: also generate LocalBusiness with address, telephone, geo, openingHours
+
+   If content is a BLOG POST or ARTICLE:
+     -> Generate Article or BlogPosting with headline, author (Person), datePublished, image, publisher
+     -> Generate BreadcrumbList: Home > Blog > Article Title
+
+   If content is a PRODUCT page:
+     -> Generate Product with name, description, brand, sku, offers (price, priceCurrency, availability)
+     -> Add AggregateRating if reviews mentioned
+
+   If content is HOME page:
+     -> Generate WebSite with name, url, potentialAction (SearchAction)
+     -> Generate Organization
+
+   If content is FAQ page:
+     -> Generate FAQPage with mainEntity array of {"@type":"Question","name":"Q?","acceptedAnswer":{"@type":"Answer","text":"A"}}
+
+   If content is a PORTFOLIO or PERSON page:
+     -> Generate Person with name, jobTitle, url, sameAs (LinkedIn, GitHub, Twitter)
+
+   If content is an EVENT:
+     -> Generate Event with name, startDate, endDate, location (Place), organizer
+
+   ALWAYS add WebPage schema for any page type.
+
+   EXAMPLE - Digital Marketing Agency services page should generate 3 schemas:
+   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Agency Name","url":"https://example.com","description":"Agency description","contactPoint":{"@type":"ContactPoint","telephone":"+1-000-000-0000","contactType":"customer service"}}</script>
+   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Service","name":"Digital Marketing Services","serviceType":"Digital Marketing","provider":{"@type":"Organization","name":"Agency Name"},"areaServed":"United States","description":"Comprehensive digital marketing services including SEO, PPC, and social media"}</script>
+   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Digital Marketing Services","url":"https://example.com/services","description":"Page description","publisher":{"@type":"Organization","name":"Agency Name"}}</script>
+
+9. OG Tags: og:title, og:description, og:type, og:url, og:image, og:site_name
+10. Twitter Card: summary_large_image with twitter:title, twitter:description, twitter:image, twitter:site
+11. All content must be natural, SEO-friendly, no keyword stuffing
+12. Use real inferred values for all schema fields - NEVER use "Unknown", "N/A", or empty strings
+
+OUTPUT FORMAT: Return ONLY raw HTML. No markdown, no code fences, no explanation, no <html>/<body> tags.
+Start output with: <!-- SEO Head Tags Generated by AI -->
+
+FINAL VERIFICATION: The meta description MUST be 150-155 characters including spaces. Count it.`;
 
       // ── CALL GROQ API ──────────────────────────────────
       // Groq uses OpenAI-compatible format but is FREE and extremely fast (LLaMA 3)
