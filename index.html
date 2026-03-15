@@ -715,12 +715,12 @@
       // ── BUILD AI PROMPT ──────────────────────────────────────
       // Detailed instructions ensure Groq/LLaMA returns exactly what we need:
       // raw HTML tags, no markdown, with strict description char limits.
-      const prompt = `You are a world-class SEO specialist and Schema.org expert. Analyze the HTML/content and generate a fully SEO-optimized <head> section.
+      const prompt = `You are a world-class SEO specialist and Schema.org expert. Analyze the HTML/content and generate a fully SEO-optimized head section.
 
 USER CONTENT:
 ${code.substring(0, 8000)}
 
-CANONICAL URL: ${canonical || 'Not provided — infer from content or leave blank'}
+CANONICAL URL: ${canonical || 'Not provided - infer from content or leave blank'}
 
 Generate ONLY these requested tags: ${wantList}
 
@@ -733,59 +733,63 @@ STRICT RULES:
 6. Robots: "index, follow" unless content suggests otherwise
 7. Publisher: Infer brand or company name from content
 
-8. SCHEMA RULES - THIS IS THE MOST IMPORTANT RULE - READ CAREFULLY:
-   You MUST generate the CORRECT schema type(s) based on what the content is actually about.
-   Do NOT default to only Organization. Analyze deeply.
-   Generate MULTIPLE separate <script type="application/ld+json"> blocks when content supports it.
+8. SCHEMA RULES - CRITICAL:
+   You MUST generate the CORRECT schema type(s) based on what the content is about.
+   Do NOT always generate Organization. Analyze the content carefully.
+   Generate MULTIPLE separate JSON-LD script blocks when content supports it.
 
-   SCHEMA DECISION GUIDE - generate ALL schemas that match:
+   SCHEMA SELECTION - generate ALL that apply:
 
-   If content is about SERVICES (web design, SEO, marketing, consulting, etc.):
-     -> MUST generate Service schema: {"@type":"Service","name":"Service Name","serviceType":"Type of Service","provider":{"@type":"Organization","name":"Company Name"},"areaServed":"City/Country","description":"What the service does"}
-     -> Also generate Organization schema for the company
-     -> Also generate WebPage schema
+   SERVICE page (web design, SEO, marketing, consulting etc):
+     - MUST generate Service schema with: serviceType, provider (Organization), areaServed, description
+     - Also generate Organization schema
+     - Also generate WebPage schema
 
-   If content is a COMPANY / ABOUT page:
-     -> Generate Organization with name, url, logo, description, contactPoint, sameAs (social links)
-     -> If has physical address: also generate LocalBusiness with address, telephone, geo, openingHours
+   COMPANY or ABOUT page:
+     - Generate Organization with name, url, logo, description, contactPoint, sameAs
+     - If physical address exists: also generate LocalBusiness with address, telephone, geo
 
-   If content is a BLOG POST or ARTICLE:
-     -> Generate Article or BlogPosting with headline, author (Person), datePublished, image, publisher
-     -> Generate BreadcrumbList: Home > Blog > Article Title
+   BLOG POST or ARTICLE:
+     - Generate Article or BlogPosting with headline, author (Person type), datePublished, image, publisher
+     - Also generate BreadcrumbList: Home, Blog, Article Title
 
-   If content is a PRODUCT page:
-     -> Generate Product with name, description, brand, sku, offers (price, priceCurrency, availability)
-     -> Add AggregateRating if reviews mentioned
+   PRODUCT page:
+     - Generate Product with name, description, brand, sku, offers (price, priceCurrency, availability)
+     - Add AggregateRating if reviews are mentioned
 
-   If content is HOME page:
-     -> Generate WebSite with name, url, potentialAction (SearchAction)
-     -> Generate Organization
+   HOME page:
+     - Generate WebSite with name, url, potentialAction SearchAction
+     - Generate Organization
 
-   If content is FAQ page:
-     -> Generate FAQPage with mainEntity array of {"@type":"Question","name":"Q?","acceptedAnswer":{"@type":"Answer","text":"A"}}
+   FAQ page:
+     - Generate FAQPage with mainEntity array of Question and Answer pairs
 
-   If content is a PORTFOLIO or PERSON page:
-     -> Generate Person with name, jobTitle, url, sameAs (LinkedIn, GitHub, Twitter)
+   PORTFOLIO or PERSON page:
+     - Generate Person with name, jobTitle, url, sameAs for social links
 
-   If content is an EVENT:
-     -> Generate Event with name, startDate, endDate, location (Place), organizer
+   EVENT page:
+     - Generate Event with name, startDate, endDate, location (Place type), organizer
 
-   ALWAYS add WebPage schema for any page type.
+   ALWAYS also add WebPage schema for any page type.
 
-   EXAMPLE - Digital Marketing Agency services page should generate 3 schemas:
-   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Agency Name","url":"https://example.com","description":"Agency description","contactPoint":{"@type":"ContactPoint","telephone":"+1-000-000-0000","contactType":"customer service"}}</script>
-   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Service","name":"Digital Marketing Services","serviceType":"Digital Marketing","provider":{"@type":"Organization","name":"Agency Name"},"areaServed":"United States","description":"Comprehensive digital marketing services including SEO, PPC, and social media"}</script>
-   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Digital Marketing Services","url":"https://example.com/services","description":"Page description","publisher":{"@type":"Organization","name":"Agency Name"}}</script>
+   EXAMPLE - For a digital marketing agency services page, generate 3 separate JSON-LD blocks:
+   Block 1: Organization type - company name, url, description, contactPoint
+   Block 2: Service type - name, serviceType="Digital Marketing", provider=company, areaServed, description
+   Block 3: WebPage type - name, url, description, publisher
+
+   EXAMPLE - For a blog post, generate 2 separate JSON-LD blocks:
+   Block 1: BlogPosting type - headline, author, datePublished, image, publisher
+   Block 2: BreadcrumbList type - Home, Blog, Post Title
 
 9. OG Tags: og:title, og:description, og:type, og:url, og:image, og:site_name
 10. Twitter Card: summary_large_image with twitter:title, twitter:description, twitter:image, twitter:site
 11. All content must be natural, SEO-friendly, no keyword stuffing
-12. Use real inferred values for all schema fields - NEVER use "Unknown", "N/A", or empty strings
+12. Use real inferred values for all schema fields. NEVER use Unknown, N/A, or empty strings.
 
-OUTPUT FORMAT: Return ONLY raw HTML. No markdown, no code fences, no explanation, no <html>/<body> tags.
-Start output with: <!-- SEO Head Tags Generated by AI -->
+OUTPUT FORMAT: Return ONLY raw HTML tags. No markdown, no code fences, no explanation.
+Start output with an HTML comment: SEO Head Tags Generated by AI
 
-FINAL VERIFICATION: The meta description MUST be 150-155 characters including spaces. Count it.`;
+FINAL CHECK: The meta description MUST be 150-155 characters including spaces. Verify before outputting.`;
 
       // ── CALL GROQ API ──────────────────────────────────
       // Groq uses OpenAI-compatible format but is FREE and extremely fast (LLaMA 3)
@@ -802,7 +806,7 @@ FINAL VERIFICATION: The meta description MUST be 150-155 characters including sp
             messages: [
               {
                 role: 'system',                 // System message defines AI behavior
-                content: 'You are an expert SEO specialist. Return ONLY raw HTML tags with no markdown, no code fences, no explanation.'
+                content: 'You are a world-class SEO and Schema.org expert. Return ONLY raw HTML tags — no markdown, no code fences, no explanation. Always generate MULTIPLE separate JSON-LD schema blocks based on the content type. Never generate only Organization schema. Generate Service, WebPage, Article, Product, LocalBusiness, FAQPage or other relevant schemas based on what the content is actually about.'
               },
               {
                 role: 'user',                   // User message has the page content + rules
@@ -861,7 +865,7 @@ FINAL VERIFICATION: The meta description MUST be 150-155 characters including sp
       document.getElementById('codeOutput').textContent = html;
 
       // ── METRIC: Count total HTML tags ────────────────────────
-      // Matches <meta, <title, <link, <script openings
+      // Matches meta, title, link, script tag openings
       const tagCount = (html.match(/<(meta|title|link|script)/gi) || []).length;
       document.getElementById('metricTags').textContent = tagCount;
 
